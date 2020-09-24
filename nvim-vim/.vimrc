@@ -3,41 +3,63 @@
 """"""""""""""""""""""""""""""""""""""""""""""
 " install plugins using vim-plug
 call plug#begin('~/.vim/plugged')
-" editor theme
-Plug 'rakr/vim-one'
-" better syntax highlighting for most modern languages
-Plug 'sheerun/vim-polyglot'
-" better jinja filetype detection
-Plug 'Glench/Vim-Jinja2-Syntax'
-" status bar for vim
-Plug 'vim-airline/vim-airline'
-" git integration
-Plug 'tpope/vim-fugitive'
 " git indicators in the gutter
 Plug 'airblade/vim-gitgutter'
-" rapid HTML editing snippets to make it less hellish
-Plug 'mattn/emmet-vim'
-" rapid vim commenting support
-Plug 'preservim/nerdcommenter'
-" Tree file explorer
-Plug 'preservim/nerdtree'
-" Allows better edit mode exiting
-Plug 'zhou13/vim-easyescape'
-" neomake linters
-Plug 'neomake/neomake'
-" deoplete for neovim (autocomplete provider)
-Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
+Plug 'arakashic/chromatica.nvim'
 " LSP provider
 Plug 'autozimu/LanguageClient-neovim', {
     \ 'branch': 'next',
     \ 'do': 'bash install.sh ',
     \ }
+" better jinja filetype detection
+Plug 'Glench/Vim-Jinja2-Syntax'
 " fzf for search, menus and stuff
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
-" snippets
+" text alignment tools
+Plug 'junegunn/vim-easy-align'
+" rapid HTML editing snippets to make it less hellish
+Plug 'mattn/emmet-vim'
+" neomake linters
+Plug 'neomake/neomake'
+"
+Plug 'octol/vim-cpp-enhanced-highlight'
+" rapid vim commenting support
+Plug 'preservim/nerdcommenter'
+" Tree file explorer
+Plug 'preservim/nerdtree'
+" Vimspector debugger support
+Plug 'puremourning/vimspector', {'do': './install_gadget.py --enable-c --enable-python'}
+" editor theme
+Plug 'rakr/vim-one'
+" better syntax highlighting for most modern languages
+Plug 'sheerun/vim-polyglot'
+" deoplete for neovim (autocomplete provider)
+if has('nvim')
+    Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
+else
+    Plug 'Shougo/deoplete.nvim'
+    Plug 'roxma/nvim-yarp'
+    Plug 'roxma/vim-hug-neovim-rpc'
+endif
+Plug 'Shirk/vim-gas'
+Plug 'Shougo/echodoc.vim'
+" Very powerful snippets
 Plug 'SirVer/ultisnips'
+" Sublime-style multiline select
+Plug 'terryma/vim-multiple-cursors'
+" git integration
+Plug 'tpope/vim-fugitive'
+" easy way to wrap text with paired chars
+Plug 'tpope/vim-surround'
+" status bar for vim
+Plug 'vim-airline/vim-airline'
+" Allows better edit mode exiting
+Plug 'zhou13/vim-easyescape'
 call plug#end()
+
+" Enable Basic GDB support
+"packadd! vimdebug
 
 " THEMING SECTION
 """"""""""""""""""""""""""""""""""""""""""""""
@@ -86,9 +108,9 @@ set ttimeoutlen=10
 """"""""""""""""""""""""""""""""""""""""""""""
 " Indentation
 " General indent overrides for files that look better with different
-" tabstops
-if !exists('ao_indent')
-    let ao_indent = 1
+" tabstop
+augroup cust_indent
+    autocmd!
     " html should be indented by two spaces per google and twitter style guides
     autocmd FileType html set tabstop=8 shiftwidth=2 softtabstop=2 expandtab
     autocmd FileType htmldjango set tabstop=8 shiftwidth=2 softtabstop=2 expandtab
@@ -96,15 +118,18 @@ if !exists('ao_indent')
     autocmd FileType make set noexpandtab shiftwidth=8 tabstop=8 softtabstop=0
     " yaml should also be indented by two spaces in most coding standards
     autocmd FileType yaml set tabstop=8 shiftwidth=2 softtabstop=2 expandtab
-endif
+    " override GNU ASM files to use spaces
+    set tabstop=8 shiftwidth=4 softtabstop=4 expandtab
+augroup END
 " tabbing for everything else
 set tabstop=8 shiftwidth=4 softtabstop=4 expandtab
 
 " strip trailing spaces
-if !exists('ao_trailing')
-    autocmd FileType c,cpp,java,python,vim
-        \ autocmd BufWritePre <buffer> %s/\s\+$//e
-endif
+augroup strip_trailing
+    autocmd!
+    autocmd FileType asm,c,cpp,gas,java,python,vim
+        \ autocmd! BufWritePre <buffer> %s/\s\+$//e
+augroup END
 
 " convenient quality of life stuff
 " highlight the line the cursor is on
@@ -117,14 +142,16 @@ set textwidth=80
 " GENERAL SETTINGS SECTION
 """"""""""""""""""""""""""""""""""""""""""""""
 filetype plugin on
+filetype plugin indent on
 " Disable cursor shape switching in insert mode
 set guicursor=
 
 " Set spellcheck on certain classes of files
-if !exists('ao_spellcheck')
+augroup set_spelling
+    autocmd!
     autocmd BufRead,BufNewFile *.md,*.tex setlocal spell
     autocmd FileType gitcommit,text setlocal spell
-endif
+augroup END
 
 " snippet to bind autocomplete to ctrl-space
 if has("gui_running")
@@ -132,10 +159,10 @@ if has("gui_running")
     inoremap <C-Space> <C-n>
 else " no gui
     if has("unix")
-        inoremap <C-Space>  
+        inoremap <C-Space> 
     endif
 endif
-
+" syntax debug mapping
 " GENERAL PLUGIN SECTION
 """"""""""""""""""""""""""""""""""""""""""""""
 " Nerd commenter settings
@@ -144,9 +171,9 @@ let g:NERDSpaceDelims = 1
 " Trim trailing whitespace when uncommenting
 let g:NERDTrimTrailingWhitespace = 1
 
-" easy escape keybinds
+" Vim-Easy-Escape keybinds
 " Bind 1 'j' and 1 'k'
-let g:easyescape_chars = { "j": 1, "k": 1 }
+let g:easyescape_chars = { 'j': 1, 'k': 1 }
 " 100 ms timout
 let g:easyescape_timeout = 100
 " bind jk and kj
@@ -156,27 +183,124 @@ cnoremap kj <ESC>
 " Deoplete autocomplete config
 let g:deoplete#enable_at_startup = 1
 
+" echodoc config
+let g:echodoc_enable_at_startup = 1
+let g:echodoc#type = 'floating'
+
 " LanguageClient config
 " Configured LanguageServers
 let g:LanguageClient_serverCommands = {
-    \ 'c': ['clangd', '--background-index'],
-    \ 'cpp': ['clangd', '--background-index'],
-    \ 'css': ['css-languageserver', '--stdio'],
-    \ 'html': ['html-languageserver', '--stdio'],
-    \ 'javascript': ['javascript-typescript-stdio'],
-    \ 'javascript.jsx': ['javascript-typescript-stdio'],
-    \ 'json': ['vscode-json-languageserver', '--stdio'],
-    \ 'less': ['css-languageserver', '--stdio'],
-    \ 'python': ['pyls'],
-    \ 'ruby': ['~/.rbenv/shims/solargraph', 'stdio'],
-    \ 'rust': ['~/.cargo/bin/rustup', 'run', 'stable', 'rls'],
-    \ 'scss': ['css-languageserver', '--stdio'],
+    \ 'c'              : ['clangd', '--background-index'],
+    \ 'cpp'            : ['clangd', '--background-index'],
+    \ 'css'            : ['css-languageserver', '--stdio'],
+    \ 'html'           : ['html-languageserver', '--stdio'],
+    \ 'javascript'     : ['javascript-typescript-stdio'],
+    \ 'javascript.jsx' : ['javascript-typescript-stdio'],
+    \ 'json'           : ['vscode-json-languageserver', '--stdio'],
+    \ 'less'           : ['css-languageserver', '--stdio'],
+    \ 'python'         : ['pyls'],
+    \ 'ruby'           : ['~/.rbenv/shims/solargraph', 'stdio'],
+    \ 'rust'           : ['~/.cargo/bin/rustup', 'run', 'stable', 'rls'],
+    \ 'scss'           : ['css-languageserver', '--stdio']
     \ }
-" bind F5 to context menu
-nnoremap <F5> :call LanguageClient_contextMenu()<CR>
+" map LanguageClient keymappings only for supported languages
+function LC_map_keys()
+    if has_key(g:LanguageClient_serverCommands, &filetype)
+        " bind F5 to context menu
+        nnoremap <F5> :call LanguageClient_contextMenu()<CR>
+        nnoremap <silent> gd :call LanguageClient#textDocument_definition()<CR>
+        nnoremap <silent> <F2> :call LanguageClient#textDocument_rename()<CR>
+        nnoremap <silent> K :call LanguageClient#textDocument_hover()<CR>
+    endif
+endfunction
+" map keys on supported buffers
+autocmd FileType * call LC_map_keys()
+
 " UltiSnips config
-" UltiSnips explansion hotkey
-let g:UltiSnipsExpandTrigger="<tab>"
-" UltiSnips expansion shortcuts
-let g:UltiSnipsJumpForwardTrigger="<c-b>"
-let g:UltiSnipsJumpBackwardTrigger="<c-z>"
+let g:UltiSnipsExpandTrigger       = '<tab>'
+let g:UltiSnipsJumpForwardTrigger  = '<c-b>'
+let g:UltiSnipsJumpBackwardTrigger = '<c-z>'
+
+" Vim-Multiple-Cursors config
+" Manually map for comfort
+let g:multi_cursor_use_default_mapping=0
+" Default mapping
+let g:multi_cursor_start_word_key      = '<C-n>'
+let g:multi_cursor_select_all_word_key = '<A-n>'
+let g:multi_cursor_start_key           = 'g<C-n>'
+let g:multi_cursor_select_all_key      = 'g<A-n>'
+let g:multi_cursor_next_key            = '<C-n>'
+let g:multi_cursor_prev_key            = '<C-p>'
+let g:multi_cursor_skip_key            = '<C-x>'
+let g:multi_cursor_quit_key            = '<Esc>'
+" Prevent deoplete from trying to complete a multi-cursors selection with piles
+" of gibberish
+" Multiple Cursors entry function called before MC mode is entered
+function! Multiple_cursors_before()
+    if deoplete#is_enabled()
+        call deoplete#disable()
+        let g:deoplete_is_enable_before_multi_cursors = 1
+    else
+        let g:deoplete_is_enable_before_multi_cursors = 0
+    endif
+endfunction
+" Multiple cursors exit function called after MC mode is exited
+function! Multiple_cursors_after()
+    if g:deoplete_is_enable_before_multi_cursors
+        call deoplete#enable()
+    endif
+endfunction
+
+" Vim Easy Align config
+" Start interactive EasyAlign in visual mode (e.g. vipga)
+xmap ga <Plug>(EasyAlign)
+" Start interactive EasyAlign for a motion/text object (e.g. gaip)
+nmap ga <Plug>(EasyAlign)
+
+" Chromatica Config
+" augroup chromatica_load
+    " autocmd!
+    " autocmd BufReadPre,FileReadPre,BufNewFile *.c,*.cpp,*.h,*.hpp ChromaticaStart
+" augroup END
+" let g:chromatica#responsive_mode=1
+
+" Enhanced cpp hilight config
+let g:cpp_class_scope_highlight = 1
+let g:cpp_member_variable_highlight = 1
+let g:cpp_class_decl_highlight = 1
+let g:cpp_posix_standard = 1
+let g:cpp_experimental_simple_template_highlight = 1
+let g:cpp_concepts_highlight = 1
+
+" NERDTree config
+" keymaps
+nnoremap <leader>tt :NERDTreeToggle<CR>
+nnoremap <leader>tf :NERDTreeFocus<CR>
+
+" VIMSpector Config
+function! Vimspector_start()
+    nnoremap <F3> :call vimspector#Stop()<CR>
+    nnoremap <F4> :call vimspector#Restart()<CR>
+    nnoremap <F17> :call vimspector#Continue()<CR>
+    nnoremap <F10> :call vimspector#StepOver()<CR>
+    nnoremap <F11> :call vimspector#StepInto()<CR>
+    nnoremap <F12> :call vimspector#StepOut()<CR>
+    call vimspector#Launch()
+endfunction
+
+function! Vimspector_stop()
+    nunmap <F3>
+    nunmap <F4>
+    nunmap <F17>
+    nunmap <F10>
+    nunmap <F11>
+    nunmap <F12>
+    exe 'VimspectorReset'
+endfunction
+
+
+nnoremap <F9> :call vimspector#ToggleBreakpoint()<CR>
+nnoremap <leader>vsl :call Vimspector_start()<CR>
+nnoremap <leader>vss :call Vimspector_stop()<CR>
+nnoremap <leader>ve :<c-u>call vimspector#Evaluate( expand( '<cexpr>' ) )<CR>
+
