@@ -18,6 +18,8 @@ Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 " text alignment tools
 Plug 'junegunn/vim-easy-align'
+" LSP based tags support
+Plug 'liuchengxu/vista.vim'
 " rapid HTML editing snippets to make it less hellish
 Plug 'mattn/emmet-vim'
 " neomake linters
@@ -190,8 +192,8 @@ let g:echodoc#type = 'floating'
 " LanguageClient config
 " Configured LanguageServers
 let g:LanguageClient_serverCommands = {
-    \ 'c'              : ['clangd', '--background-index'],
-    \ 'cpp'            : ['clangd', '--background-index'],
+    \ 'c'              : ['clangd', '--background-index', '-cross-file-rename'],
+    \ 'cpp'            : ['clangd', '--background-index', '-cross-file-rename'],
     \ 'css'            : ['css-languageserver', '--stdio'],
     \ 'html'           : ['html-languageserver', '--stdio'],
     \ 'javascript'     : ['javascript-typescript-stdio'],
@@ -264,7 +266,7 @@ nmap ga <Plug>(EasyAlign)
 " augroup END
 " let g:chromatica#responsive_mode=1
 
-" Enhanced cpp hilight config
+" Enhanced cpp highlight config
 let g:cpp_class_scope_highlight = 1
 let g:cpp_member_variable_highlight = 1
 let g:cpp_class_decl_highlight = 1
@@ -279,12 +281,12 @@ nnoremap <leader>tf :NERDTreeFocus<CR>
 
 " VIMSpector Config
 function! Vimspector_start()
-    nnoremap <F3> :call vimspector#Stop()<CR>
-    nnoremap <F4> :call vimspector#Restart()<CR>
-    nnoremap <F17> :call vimspector#Continue()<CR>
-    nnoremap <F10> :call vimspector#StepOver()<CR>
-    nnoremap <F11> :call vimspector#StepInto()<CR>
-    nnoremap <F12> :call vimspector#StepOut()<CR>
+    nmap <F3>  <Plug>VimspectorStop
+    nmap <F4>  <Plug>VimspectorRestart
+    nmap <F17> <Plug>VimspectorContinue
+    nmap <F10> <Plug>VimspectorStepOver
+    nmap <F11> <Plug>VimspectorStepInto
+    nmap <F12> <Plug>VimspectorStepOut
     call vimspector#Launch()
 endfunction
 
@@ -298,9 +300,18 @@ function! Vimspector_stop()
     exe 'VimspectorReset'
 endfunction
 
-
-nnoremap <F9> :call vimspector#ToggleBreakpoint()<CR>
+nmap <leader><F9> <Plug>VimspectorToggleConditionalBreakpoint
+nmap <F9> <Plug>VimspectorToggleBreakpoint
 nnoremap <leader>vsl :call Vimspector_start()<CR>
 nnoremap <leader>vss :call Vimspector_stop()<CR>
 nnoremap <leader>ve :<c-u>call vimspector#Evaluate( expand( '<cexpr>' ) )<CR>
 
+
+" Vista config
+augroup vista_set_exec
+    autocmd!
+    autocmd FileType c,cpp,css,html let g:vista_default_executive = 'lcn'
+augroup END
+let g:vista_icon_indent = ["╰─▸ ", "├─▸ "]
+let g:vista#renderer#enable_icon = 1
+nnoremap <leader>vst :Vista!!<CR>
